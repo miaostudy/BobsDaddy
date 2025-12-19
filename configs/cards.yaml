@@ -1,0 +1,86 @@
+# ==========================================
+# 炉石传说：酒馆战棋 卡牌数据库 (YAML版)
+# 版本: 29.2.0
+# 更新日期: 2025-12-19
+# ==========================================
+
+# --- 一本随从示例 ---
+- id: BG20_102
+  dbfId: 12345
+  name:
+    zh: 挑食魔犬
+    en: Picky Eater
+  type: MINION
+  tech_level: 1
+  cost: 3
+
+  # 随从专属属性
+  minion_info:
+    attack: 1
+    health: 1
+    # 种族列表，支持 [DEMON] 或 [MECH, BEAST] 这种双种族写法
+    races: [DEMON]
+    golden_id: BG20_102_G
+    is_token: false
+
+  # 机制与逻辑
+  mechanics:
+    # 关键字标签，用于通用逻辑判断
+    keywords: [BATTLECRY]
+
+    # 效果配置：将卡牌效果参数化
+    effect_config:
+      trigger: ON_PLAY         # 触发时机：打出时
+      action: CONSUME_MINION   # 动作：吞噬随从
+      target: FRIENDLY_TAVERN  # 目标：友方酒馆面板
+      value: 1                 # 数值：吃1个
+      desc: 吃掉酒馆中的一个随从，获得其属性值。
+
+# --- 三本双种族随从示例 ---
+- id: BG_MECHANICAL_HORSE
+  dbfId: 67890
+  name:
+    zh: 机械木马
+    en: Mechanized Pony
+  type: MINION
+  tech_level: 3
+  cost: 3
+
+  minion_info:
+    attack: 4
+    health: 4
+    # 双种族示例：既是机械也是野兽
+    races: [MECH, BEAST]
+    golden_id: BG_MECHANICAL_HORSE_G
+    # 关联的衍生卡ID，方便预加载资源
+    related_token_ids: [BG_MECHANICAL_HORSE_TOKEN]
+
+  mechanics:
+    keywords: [DEATHRATTLE, REBORN] # 亡语，复生
+    effect_config:
+      trigger: ON_DEATH
+      action: SUMMON
+      target: SELF_BOARD
+      summon_id: BG_MECHANICAL_HORSE_TOKEN
+      amount: 1
+      desc: 亡语：召唤一个机械木马宝宝。
+
+# --- 酒馆法术示例 ---
+- id: BG_SPELL_001
+  dbfId: 99999
+  name:
+    zh: 香蕉
+    en: Banana
+  type: SPELL  # 类型是法术
+  tech_level: 1
+  cost: 2      # 法术费用各不相同
+
+  # 法术没有 minion_info (无攻击/血量)
+
+  mechanics:
+    effect_config:
+      trigger: ON_CAST
+      action: BUFF
+      target: FRIENDLY_MINION_TARGET # 指向性目标
+      buff_stats: {atk: 2, hp: 2}    # 通过字典传递Buff数值
+      desc: 使一个随从获得+2/+2。
