@@ -1,2 +1,19 @@
 # BobsDaddy
-A Reinforcement Learning agent that attempts to play Hearthstone Battlegrounds.
+鲍勃大爸
+
+# TODO
+- [ ] 数据管理与解析
+  - [ ] 访问HSDB, 定期拉取最新的数据, 保存为JSON
+  - [ ] 将JSON数据转换为对象
+- [ ] 对战模拟（参考HDT）
+  - [ ] 维护全局状态、玩家状态
+  - [ ] 招揽阶段
+  - [ ] 战斗阶段
+- [ ] 强化学习
+  - [ ] 封装环境
+- [ ] 客户端交互
+  - [ ] 获取图像信息
+  - [ ] 目标检测
+  - [ ] 模拟输入
+
+# 具体模块
