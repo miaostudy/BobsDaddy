@@ -1,5 +1,55 @@
 # TODO
-- [ ] 从HSDB中自动加载卡片信息
+- [ ] 自动更新卡片信息
 - [ ] 补丁解析
 
-# HSDB 解析
+# 自动爬取数据
+## 运行命令
+```shell
+bash ./scripts/update_everything.sh
+```
+## 数据格式
+以`json`格式保存。
+```
+{   
+    id: int 标识卡牌的唯一id
+    type: enum ['hero 英雄', 'minion 随从', 'spell 法术', 'task 任务', 'award 奖励', 'mutation 异变', 'accessories 饰品', 'timeWarp 时光扭曲']
+    name: string 卡牌名
+    description: string 牌面描述
+    cost: int 卡牌花费
+    attack: int 攻击力
+    health: int 血量
+    addiction:
+        {
+            type
+            name
+            description
+            attack
+            health
+        }
+    golden：
+    {
+        type
+        name
+        description
+        attack
+        health
+    }
+    used: True/ False 当前版本是否使用该卡牌
+}
+```
+文件结构：
+```
+-asserts 数据文件夹
+    -img 按卡牌类型存储牌面图片
+        -hero
+            - 1.png
+    ....
+    -json 按卡牌类型存储卡牌信息
+        -hero
+            - 1.json
+    ....
+```
+
+
+## 类设计
+可以实现成：父类是各个类型的卡牌共有的属性，子类是各种卡牌。
