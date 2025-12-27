@@ -5,7 +5,6 @@ https://hearthstone.blizzard.com/zh-tw/battlegrounds?bgCardType=minion
 '''
 from idlelib.rpc import response_queue
 from zoneinfo import reset_tzpath
-
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
