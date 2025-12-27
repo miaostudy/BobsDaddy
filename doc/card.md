@@ -9,26 +9,31 @@ bash ./scripts/update_everything.sh
 ```
 ## 数据格式
 以`json`格式保存。
+
+英雄: 
 ```
 {   
     id: int 标识卡牌的唯一id
     type: enum ['hero 英雄', 'minion 随从', 'spell 法术', 'task 任务', 'award 奖励', 'mutation 异变', 'accessories 饰品', 'timeWarp 时光扭曲']
     name: string 卡牌名
+    description: [string] [技能描述]
+    addiction: [int] [衍生卡牌id]
+    used: True/ False 当前版本是否使用该卡牌
+}
+```
+随从：
+```
+{   
+    id: int 标识卡牌的唯一id
+    type: enum ['hero 英雄', 'minion 随从', 'spell 法术', 'task 任务', 'award 奖励', 'mutation 异变', 'accessories 饰品', 'timeWarp 时光扭曲']
+    race: [string] 种族名
+    name: string 卡牌名
     description: string 牌面描述
-    cost: int 卡牌花费
     attack: int 攻击力
     health: int 血量
-    addiction:
-        {
-            type
-            name
-            description
-            attack
-            health
-        }
+    addiction: [int] [衍生卡牌id]
     golden：
     {
-        type
         name
         description
         attack
@@ -36,17 +41,18 @@ bash ./scripts/update_everything.sh
     }
     used: True/ False 当前版本是否使用该卡牌
 }
-```
+``` 
+
 文件结构：
 ```
 -asserts 数据文件夹
-    -img 按卡牌类型存储牌面图片
+    -imgs 按卡牌类型存储牌面图片
         -hero
             - 1.png
     ....
-    -json 按卡牌类型存储卡牌信息
-        -hero
-            - 1.json
+    -jsons 按卡牌类型存储卡牌信息
+        -heros.json
+        -minions.json
     ....
 ```
 
