@@ -27,6 +27,7 @@ bash ./scripts/update_everything.sh
     id: int 标识卡牌的唯一id
     type: enum ['hero 英雄', 'minion 随从', 'spell 法术', 'task 任务', 'award 奖励', 'mutation 异变', 'accessories 饰品', 'timeWarp 时光扭曲']
     race: [string] 种族名
+    leval: int 星级
     name: string 卡牌名
     description: string 牌面描述
     attack: int 攻击力
