@@ -11,8 +11,8 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException, \
-    StaleElementReferenceException, NoSuchElementException, ElementClickInterceptedException
+from selenium.common.exceptions import TimeoutException, StaleElementReferenceException, NoSuchElementException, \
+    ElementClickInterceptedException
 from webdriver_manager.chrome import ChromeDriverManager
 import json
 import time
@@ -25,31 +25,22 @@ from selenium.webdriver.common.action_chains import ActionChains
 import re
 
 # 调整工作目录到根目录
-work_dir =os.getcwd()
+work_dir = os.getcwd()
 if work_dir.split('\\')[-1] == 'data':
     os.chdir(os.path.join(work_dir, '../'))
 
 # 日志
-logging.basicConfig(
-    level=logging.INFO,
-    handlers=[
-        logging.FileHandler("./logs/scraper.log"),
-        logging.StreamHandler()
-    ]
-)
+logging.basicConfig(level=logging.INFO, handlers=[logging.FileHandler("./logs/scraper.log"), logging.StreamHandler()])
+
 
 class UpdateEverything:
     # 初始化
-    def __init__(self,
-                 cache_dir='asserts',
-                 use_proxy=False,
-                 proxy='127.0.0.1:7890'
-                 ):
+    def __init__(self, cache_dir='asserts', use_proxy=False, proxy='127.0.0.1:7890'):
         # 缓存设置
         self.cache_dir = cache_dir
         self.json_caches_path = os.path.join(self.cache_dir, 'jsons')
+        self.img_caches_path = os.path.join(self.cache_dir, 'imgs')
         self._create_cache_dir()
-
 
         # 代理设置
         if use_proxy:
@@ -67,86 +58,62 @@ class UpdateEverything:
         options.add_experimental_option("excludeSwitches", ["enable-automation"])
         options.add_experimental_option("useAutomationExtension", False)
 
-        self.driver = webdriver.Chrome(
-            service=Service(ChromeDriverManager().install()),
-            options=options
-        )
+        self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
         self.driver.implicitly_wait(10)  # 隐式等待时间
         self.driver.set_page_load_timeout(60)  # 页面加载超时时间
-        self.driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})") # 移除webdriver特征
-        self.wait = WebDriverWait(self.driver, 15) # 通用的等待时间
+        self.driver.execute_script(
+            "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")  # 移除webdriver特征
+        self.wait = WebDriverWait(self.driver, 15)  # 通用的等待时间
 
         # 卡牌信息
         self.count = 0
         self.ids = []
+
     """创建缓存文件夹"""
+
     def _create_cache_dir(self):
         if not os.path.exists(self.cache_dir):
             os.makedirs(self.cache_dir, exist_ok=True)
-        dir_names = {
-            'imgs' : ['hero', 'minion', 'spell', 'task', 'award', 'mutation', 'accessories', 'timeWarp'],
-            'jsons' : []
-        }
+        dir_names = ['hero', 'minion', 'spell', 'task', 'award', 'mutation', 'accessories', 'timeWarp']
+
         for dir in ['imgs', 'jsons']:
             cur_path = os.path.join(self.cache_dir, dir)
             if not os.path.exists(cur_path):
                 os.makedirs(cur_path, exist_ok=True)
-            for dir_name in dir_names[dir]:
+            for dir_name in dir_names:
                 res_path = os.path.join(cur_path, dir_name)
                 if not os.path.exists(res_path):
                     os.makedirs(res_path, exist_ok=True)
 
-
     """保存数据到JSON文件"""
-    # TODO 修改成加入单个json数据
-    def _add_element_to_cache(self, data, filename):
+
+    def _save_cache(self, data, filename):
         try:
-            if not isinstance(data, dict):
-                logging.error(f"保存失败：预期输入是字典，但收到了 {type(data)}")
-                return
-
-
-            with open(filename, 'a', encoding='utf-8') as f:
+            with open(filename, 'w', encoding='utf-8') as f:
                 json.dump(data, f, ensure_ascii=False, indent=4)
-
-            logging.info(f"成功保存缓存至 {filename}")
-
+            logging.info(f"数据已保存到 {filename}")
         except Exception as e:
-            logging.error(f"保存缓存失败: {e}")
+            logging.error(f"保存JSON失败: {str(e)}")
 
     """设置代理"""
+
     def _set_proxy(self, proxy):
         os.environ['http_proxy'] = proxy
         os.environ['https_proxy'] = proxy
 
     """从缓存文件中加载数据"""
+
     def _load_cached_json(self, filename):
-        if not os.path.exists(filename):
-            with open(filename, 'w', encoding='utf-8') as f:
-                pass
         try:
-            with open(filename, 'r', encoding='utf-8') as f:
-                content = f.read()
-                if not content.strip():
-                    return {}
-
-                data_list = json.loads(content)
-
-                if not isinstance(data_list, list):
-                    logging.warning("缓存文件格式错误，重置为空")
-                    return {}
-
-                cache_dict = {}
-                for item in data_list:
-                    if 'id' in item:
-                        cache_dict[int(item['id'])] = item
-
-                logging.info(f"成功加载缓存，共 {len(cache_dict)} 条数据")
-                return cache_dict
-
+            if os.path.exists(filename) and os.path.getsize(filename) > 0:
+                with open(filename, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                logging.info(f"从缓存加载数据: {filename}")
+                return data
+            return None
         except Exception as e:
-            logging.error(f"加载缓存失败: {e}")
-            return {}
+            logging.error(f"加载缓存JSON失败: {str(e)}")
+            return None
 
     """使用Selenium获取页面并返回BeautifulSoup对象"""
     # def _get_soup(self, url, wait_for=None, timeout=30):
@@ -184,12 +151,11 @@ class UpdateEverything:
     #         return None
 
     """点击元素并等待指定条件满足"""
+
     def _click_and_wait(self, element_locator, wait_condition=None, retry=3):
         try:
             # 等待元素可点击
-            element = WebDriverWait(self.driver, 15).until(
-                EC.element_to_be_clickable(element_locator)
-            )
+            element = WebDriverWait(self.driver, 15).until(EC.element_to_be_clickable(element_locator))
 
             # 滚动到元素可见位置
             self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", element)
@@ -224,12 +190,11 @@ class UpdateEverything:
             return False
 
     """点击第一个随从"""
+
     def _click_first_minion(self):
         # 找到外层包裹
         try:
-            wrapper = self.wait.until(
-                EC.element_to_be_clickable((By.CSS_SELECTOR, "a.CardWrap"))
-            )
+            wrapper = self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "a.CardWrap")))
             target_url = wrapper.get_attribute("href")
             logging.info(f"找到第一张卡牌，目标链接是: {target_url}")
 
@@ -254,12 +219,13 @@ class UpdateEverything:
             logging.error(e)
 
         logging.info("点击成功")
-        
+
+    """获取随从总数量"""
+
     def _get_total_count(self):
         try:
             count_element = self.wait.until(
-                EC.visibility_of_element_located((By.XPATH, "//div[contains(text(), '在英雄戰場中找到')]"))
-            )
+                EC.visibility_of_element_located((By.XPATH, "//div[contains(text(), '在英雄戰場中找到')]")))
             text = count_element.text
             match = re.search(r'(\d+)', text)
             if match:
@@ -270,7 +236,7 @@ class UpdateEverything:
             # 滚动循环，加载所有的CardWarper
             last_card_count = 0
             retry_count = 0
-            max_retries = 3 # 连续滚动多少次没有新卡牌，就退出
+            max_retries = 3  # 连续滚动多少次没有新卡牌，就退出
 
             while True:
                 time.sleep(2)
@@ -316,16 +282,19 @@ class UpdateEverything:
             return len(final_cards)
         except Exception as e:
             logging.info(f'获取卡牌数量失败: {e}')
+
+    """url转成id"""
+
     def _url2id(self, url):
         return url.split("/")[-1].rsplit("-")[0]
+
+    """获取单个随从的详细信息"""
 
     def _parse_one_minion(self, id):
         logging.info(f'缓存中没有随从{id}, 开始获取详细信息')
         data = {}
         try:
-            self.wait.until(
-                EC.visibility_of_element_located((By.CLASS_NAME, "card-change-animated"))
-            )
+            self.wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "card-change-animated")))
             card_containers = self.driver.find_elements(By.CLASS_NAME, "card-change-animated")
             card_container = card_containers[-1]
             name_element = card_container.find_element(By.TAG_NAME, "h3")
@@ -351,51 +320,41 @@ class UpdateEverything:
             logging.error(f'解析随从{id}失败, {e}')
 
     """获取当前页面上所有具体随从信息"""
+
     def _get_all_minions(self):
         '''
         :return: [{}, {}, ....]
         '''
         minions = []
-        for i in range(self.count):
+        last_id = None
+        for i in tqdm(range(self.count)):
             cur_id = self._url2id(self.driver.current_url)
-            print(cur_id)
             # 加载缓存
-            minions_cache_path = os.path.join(self.json_caches_path, 'minions.json')
-            cache = self._load_cached_json(minions_cache_path)
-            if cache.get(cur_id):
-                minions.append(cache[cur_id])
+            minions_cache_path = os.path.join(os.path.join(self.json_caches_path, 'minion'), f'{cur_id}.json')
+            if os.path.exists(minions_cache_path):
+                cache = self._load_cached_json(minions_cache_path)
+                minions.append(cache)
             else:
                 data = self._parse_one_minion(cur_id)
-                self._add_element_to_cache(data, minions_cache_path)
-                # 点击next按钮
-                next_btn = self.wait.until(
-                    EC.element_to_be_clickable((By.CSS_SELECTOR, "a[direction='next']"))
-                )
+                self._save_cache(data, minions_cache_path)
+            # 点击next按钮
+            if i != self.count - 1:
+                next_btn = self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "a[direction='next']")))
                 self.driver.execute_script("arguments[0].click();", next_btn)
+                if cur_id == self._url2id(self.driver.current_url):
+                    time.sleep(1)
 
     def get_default_card_schema(self, card_type='minion'):
         """
         返回标准卡牌数据结构
         """
-        return {
-            "id": None,
-            "type": card_type,
-            "race": [],
-            "name": None,
-            "description": None,
-            "attack": None,
-            "health": None,
-            "addiction": [],
-            "golden": {
-                "name": None,
-                "description": None,
-                "attack": None,
-                "health": None
-            },
-            "used": True
-        }
+        return {"id": None, "type": card_type, "race": [], "name": None, "description": None, "attack": None,
+            "health": None, "addiction": [],
+            "golden": {"name": None, "description": None, "attack": None, "health": None}, "used": True}
+
     """解析随从"""
-    def get_minions(self,force_refresh=False):
+
+    def get_minions(self, force_refresh=False):
         logging.info(f"get minions ...")
         minions_url = self.base_url + "?bgCardType=minion"
         logging.info(f"正在访问列表页: {minions_url}")
@@ -409,8 +368,6 @@ class UpdateEverything:
         self._get_all_minions()
 
         # 检查缓存
-
-
 
 
 updater = UpdateEverything()
